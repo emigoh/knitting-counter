@@ -118,18 +118,11 @@ export default function Home() {
         {/* Counter */}
         <div className="flex flex-1 flex-col items-center justify-center p-4">
           <main className="flex flex-col items-center gap-8">
-            {/* Yarn ball icon */}
-            <div className={`w-16 h-16 rounded-full ${color.bg} flex items-center justify-center shadow-lg`}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-                <path d="M2 12h20"/>
-              </svg>
+            <div className={`px-6 py-2 rounded-full ${color.bg}`}>
+              <h1 className="text-2xl font-semibold text-white">
+                {expandedProject.name}
+              </h1>
             </div>
-
-            <h1 className="text-3xl font-semibold text-zinc-700 dark:text-zinc-200">
-              {expandedProject.name}
-            </h1>
 
             <div className="flex flex-col items-center gap-2">
               <span className="text-sm uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
@@ -188,20 +181,12 @@ export default function Home() {
               <button
                 key={project.id}
                 onClick={() => setExpandedProjectId(project.id)}
-                className={`group flex flex-col items-center justify-center gap-3 rounded-2xl ${color.light} dark:bg-zinc-800 p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] aspect-square`}
+                className={`group flex flex-col items-center justify-center gap-2 rounded-2xl ${color.bg} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] hover:brightness-110 active:scale-[0.98] aspect-square`}
               >
-                {/* Yarn ball icon */}
-                <div className={`w-12 h-12 rounded-full ${color.bg} flex items-center justify-center shadow-md`}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"/>
-                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/>
-                    <path d="M2 12h20"/>
-                  </svg>
-                </div>
-                <span className={`text-4xl font-bold tabular-nums ${color.text} dark:text-zinc-100`}>
+                <span className="text-5xl font-bold tabular-nums text-white">
                   {project.count}
                 </span>
-                <span className="text-sm font-medium text-zinc-600 dark:text-zinc-400 truncate max-w-full px-2">
+                <span className="text-sm font-medium text-white/90 truncate max-w-full px-2">
                   {project.name}
                 </span>
               </button>
