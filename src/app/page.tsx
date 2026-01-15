@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { createClient } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 const COLORS = [
   { bg: "bg-rose-500", light: "bg-rose-100", text: "text-rose-600" },
@@ -19,81 +21,226 @@ interface Project {
   id: string;
   name: string;
   count: number;
-  colorIndex: number;
+  color_index: number;
 }
 
 export default function Home() {
+  const [user, setUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  const [authMode, setAuthMode] = useState<"login" | "signup">("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [authError, setAuthError] = useState("");
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [expandedProjectId, setExpandedProjectId] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [isAdding, setIsAdding] = useState(false);
 
+  const supabase = createClient();
+
+  // Check auth state on mount
   useEffect(() => {
-    const saved = localStorage.getItem("knitting-projects");
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      // Migrate old projects without colorIndex
-      const migratedProjects = (parsed.projects || []).map((p: Project, i: number) => ({
-        ...p,
-        colorIndex: p.colorIndex ?? i % COLORS.length,
-      }));
-      setProjects(migratedProjects);
-    }
-    setLoaded(true);
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+      setAuthLoading(false);
+    };
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  useEffect(() => {
-    if (loaded) {
-      localStorage.setItem("knitting-projects", JSON.stringify({ projects }));
+  // Fetch projects when user is logged in
+  const fetchProjects = useCallback(async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("projects")
+      .select("*")
+      .order("created_at", { ascending: true });
+    if (!error && data) {
+      setProjects(data);
     }
-  }, [projects, loaded]);
+  }, [user]);
 
-  const expandedProject = projects.find((p) => p.id === expandedProjectId);
+  useEffect(() => {
+    fetchProjects();
+  }, [fetchProjects]);
 
-  const addProject = () => {
-    if (!newProjectName.trim()) return;
-    const newProject: Project = {
-      id: Date.now().toString(),
+  // Real-time subscription
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel("projects-changes")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "projects" },
+        () => {
+          fetchProjects();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, fetchProjects]);
+
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthError("");
+
+    if (authMode === "signup") {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) {
+        setAuthError(error.message);
+      } else {
+        setAuthError("Check your email to confirm your account!");
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        setAuthError(error.message);
+      }
+    }
+  };
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setProjects([]);
+  };
+
+  const addProject = async () => {
+    if (!newProjectName.trim() || !user) return;
+    const { error } = await supabase.from("projects").insert({
+      user_id: user.id,
       name: newProjectName.trim(),
       count: 0,
-      colorIndex: projects.length % COLORS.length,
-    };
-    setProjects([...projects, newProject]);
-    setNewProjectName("");
-    setIsAdding(false);
+      color_index: projects.length % COLORS.length,
+    });
+    if (!error) {
+      setNewProjectName("");
+      setIsAdding(false);
+      fetchProjects();
+    }
   };
 
-  const deleteProject = (id: string) => {
-    setProjects(projects.filter((p) => p.id !== id));
+  const deleteProject = async (id: string) => {
+    await supabase.from("projects").delete().eq("id", id);
     setExpandedProjectId(null);
+    fetchProjects();
   };
 
-  const updateCount = (id: string, delta: number) => {
-    setProjects(
-      projects.map((p) =>
-        p.id === id ? { ...p, count: Math.max(0, p.count + delta) } : p
-      )
-    );
+  const updateCount = async (id: string, delta: number) => {
+    const project = projects.find((p) => p.id === id);
+    if (!project) return;
+    const newCount = Math.max(0, project.count + delta);
+
+    // Optimistic update
+    setProjects(projects.map((p) => (p.id === id ? { ...p, count: newCount } : p)));
+
+    await supabase.from("projects").update({ count: newCount }).eq("id", id);
   };
 
-  const resetCount = (id: string) => {
+  const resetCount = async (id: string) => {
     setProjects(projects.map((p) => (p.id === id ? { ...p, count: 0 } : p)));
+    await supabase.from("projects").update({ count: 0 }).eq("id", id);
   };
 
   const getColor = (colorIndex: number) => COLORS[colorIndex % COLORS.length];
 
-  if (!loaded) {
+  const expandedProject = projects.find((p) => p.id === expandedProjectId);
+
+  // Loading state
+  if (authLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-rose-50 to-pink-100 dark:from-zinc-900 dark:to-zinc-800">
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800">
         <span className="text-zinc-400">Loading...</span>
+      </div>
+    );
+  }
+
+  // Auth screen
+  if (!user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800 p-4">
+        <div className="w-full max-w-sm">
+          <h1 className="text-2xl font-bold text-center text-zinc-800 dark:text-zinc-100 mb-2">
+            Knitting Row Counter
+          </h1>
+          <p className="text-center text-zinc-500 dark:text-zinc-400 mb-8">
+            Sign in to sync your projects across devices
+          </p>
+
+          <form onSubmit={handleAuth} className="flex flex-col gap-4">
+            <input
+              type="email"
+              placeholder="Email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 outline-none focus:border-rose-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+              required
+            />
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-3 outline-none focus:border-rose-400 dark:border-zinc-600 dark:bg-zinc-800 dark:text-white"
+              required
+              minLength={6}
+            />
+
+            {authError && (
+              <p className={`text-sm text-center ${authError.includes("Check your email") ? "text-emerald-600" : "text-red-500"}`}>
+                {authError}
+              </p>
+            )}
+
+            <button
+              type="submit"
+              className="w-full rounded-lg bg-rose-500 py-3 font-medium text-white hover:bg-rose-600 transition-colors"
+            >
+              {authMode === "login" ? "Sign In" : "Sign Up"}
+            </button>
+          </form>
+
+          <p className="mt-4 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            {authMode === "login" ? (
+              <>
+                Don&apos;t have an account?{" "}
+                <button
+                  onClick={() => setAuthMode("signup")}
+                  className="text-rose-500 hover:underline"
+                >
+                  Sign up
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?{" "}
+                <button
+                  onClick={() => setAuthMode("login")}
+                  className="text-rose-500 hover:underline"
+                >
+                  Sign in
+                </button>
+              </>
+            )}
+          </p>
+        </div>
       </div>
     );
   }
 
   // Expanded full-screen view
   if (expandedProject) {
-    const color = getColor(expandedProject.colorIndex);
+    const color = getColor(expandedProject.color_index);
     return (
       <div className="fixed inset-0 flex flex-col bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800 animate-in fade-in zoom-in-95 duration-200">
         {/* Header */}
@@ -166,17 +313,23 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-zinc-50 to-zinc-100 dark:from-zinc-900 dark:to-zinc-800">
       {/* Header */}
-      <div className="border-b border-zinc-200 bg-white/50 px-4 py-4 dark:border-zinc-700 dark:bg-zinc-800/50">
+      <div className="flex items-center justify-between border-b border-zinc-200 bg-white/50 px-4 py-4 dark:border-zinc-700 dark:bg-zinc-800/50">
         <h1 className="text-xl font-semibold text-zinc-700 dark:text-zinc-200">
           Knitting Row Counter
         </h1>
+        <button
+          onClick={handleLogout}
+          className="text-sm text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          Sign Out
+        </button>
       </div>
 
       {/* Projects Grid */}
       <div className="p-4">
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
           {projects.map((project) => {
-            const color = getColor(project.colorIndex);
+            const color = getColor(project.color_index);
             return (
               <button
                 key={project.id}
