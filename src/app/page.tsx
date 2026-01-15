@@ -76,12 +76,30 @@ export default function Home() {
     if (!user) return;
 
     const channel = supabase
-      .channel("projects-changes")
+      .channel(`projects-${user.id}`)
       .on(
         "postgres_changes",
-        { event: "*", schema: "public", table: "projects" },
-        () => {
-          fetchProjects();
+        {
+          event: "*",
+          schema: "public",
+          table: "projects",
+          filter: `user_id=eq.${user.id}`
+        },
+        (payload) => {
+          // Handle different event types for immediate updates
+          if (payload.eventType === "UPDATE") {
+            setProjects((prev) =>
+              prev.map((p) =>
+                p.id === payload.new.id ? (payload.new as Project) : p
+              )
+            );
+          } else if (payload.eventType === "INSERT") {
+            setProjects((prev) => [...prev, payload.new as Project]);
+          } else if (payload.eventType === "DELETE") {
+            setProjects((prev) =>
+              prev.filter((p) => p.id !== payload.old.id)
+            );
+          }
         }
       )
       .subscribe();
@@ -89,7 +107,7 @@ export default function Home() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, fetchProjects]);
+  }, [user]);
 
   const handleAuth = async (e: React.FormEvent) => {
     e.preventDefault();
