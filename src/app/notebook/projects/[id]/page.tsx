@@ -130,8 +130,8 @@ export default function ProjectDetailPage() {
         </div>
         <div className="flex flex-1 flex-col items-center justify-center p-4">
           <main className="flex flex-col items-center gap-8">
-            <div className={`px-6 py-2 rounded-full ${color.bg}`}>
-              <h1 className="text-2xl font-semibold text-white">{project.name}</h1>
+            <div className={`px-6 py-2 rounded-full bg-[var(--cream)] border-2 ${color.border}`}>
+              <h1 className={`text-2xl font-semibold ${color.text}`}>{project.name}</h1>
             </div>
             <div className="flex flex-col items-center gap-2">
               <span className="text-sm uppercase tracking-wide text-zinc-500">Row</span>
@@ -181,7 +181,7 @@ export default function ProjectDetailPage() {
         {/* Project Header */}
         <div className="mb-8 flex items-start justify-between">
           <div className="flex items-center gap-4">
-            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${color.bg} text-2xl font-bold text-white`}>
+            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-[var(--cream)] border-2 ${color.border} text-2xl font-bold ${color.text}`}>
               {project.row_count}
             </div>
             <div>
@@ -195,7 +195,7 @@ export default function ProjectDetailPage() {
           <div className="flex gap-2">
             <button
               onClick={() => setShowCounter(true)}
-              className={`rounded-lg ${color.bg} px-4 py-2 text-sm font-medium text-white hover:brightness-110 transition-all`}
+              className={`rounded-lg border-2 ${color.border} px-4 py-2 text-sm font-medium ${color.text} hover:bg-zinc-50 transition-all`}
             >
               Row Counter
             </button>

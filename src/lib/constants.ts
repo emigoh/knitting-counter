@@ -1,14 +1,14 @@
 export const PROJECT_COLORS = [
-  { bg: "bg-rose-500", light: "bg-rose-100", text: "text-rose-600", hex: "#f43f5e" },
-  { bg: "bg-sky-500", light: "bg-sky-100", text: "text-sky-600", hex: "#0ea5e9" },
-  { bg: "bg-amber-500", light: "bg-amber-100", text: "text-amber-600", hex: "#f59e0b" },
-  { bg: "bg-emerald-500", light: "bg-emerald-100", text: "text-emerald-600", hex: "#10b981" },
-  { bg: "bg-violet-500", light: "bg-violet-100", text: "text-violet-600", hex: "#8b5cf6" },
-  { bg: "bg-orange-500", light: "bg-orange-100", text: "text-orange-600", hex: "#f97316" },
-  { bg: "bg-teal-500", light: "bg-teal-100", text: "text-teal-600", hex: "#14b8a6" },
-  { bg: "bg-pink-500", light: "bg-pink-100", text: "text-pink-600", hex: "#ec4899" },
-  { bg: "bg-indigo-500", light: "bg-indigo-100", text: "text-indigo-600", hex: "#6366f1" },
-  { bg: "bg-lime-500", light: "bg-lime-100", text: "text-lime-600", hex: "#84cc16" },
+  { bg: "bg-rose-500", light: "bg-rose-100", text: "text-rose-600", border: "border-rose-500", hex: "#f43f5e" },
+  { bg: "bg-sky-500", light: "bg-sky-100", text: "text-sky-600", border: "border-sky-500", hex: "#0ea5e9" },
+  { bg: "bg-amber-500", light: "bg-amber-100", text: "text-amber-600", border: "border-amber-500", hex: "#f59e0b" },
+  { bg: "bg-emerald-500", light: "bg-emerald-100", text: "text-emerald-600", border: "border-emerald-500", hex: "#10b981" },
+  { bg: "bg-violet-500", light: "bg-violet-100", text: "text-violet-600", border: "border-violet-500", hex: "#8b5cf6" },
+  { bg: "bg-orange-500", light: "bg-orange-100", text: "text-orange-600", border: "border-orange-500", hex: "#f97316" },
+  { bg: "bg-teal-500", light: "bg-teal-100", text: "text-teal-600", border: "border-teal-500", hex: "#14b8a6" },
+  { bg: "bg-pink-500", light: "bg-pink-100", text: "text-pink-600", border: "border-pink-500", hex: "#ec4899" },
+  { bg: "bg-indigo-500", light: "bg-indigo-100", text: "text-indigo-600", border: "border-indigo-500", hex: "#6366f1" },
+  { bg: "bg-lime-500", light: "bg-lime-100", text: "text-lime-600", border: "border-lime-500", hex: "#84cc16" },
 ];
 
 export const PROJECT_STATUSES = [

@@ -124,18 +124,18 @@ export default function ProjectsPage() {
               <Link
                 key={project.id}
                 href={`/notebook/projects/${project.id}`}
-                className={`group flex flex-col items-center justify-center gap-2 rounded-2xl ${color.bg} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] aspect-square relative`}
+                className={`group flex flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--cream)] border-2 ${color.border} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] aspect-square relative`}
               >
-                <span className="text-5xl font-bold tabular-nums text-white">
+                <span className={`text-5xl font-bold tabular-nums ${color.text}`}>
                   {project.row_count}
                 </span>
-                <span className="text-sm font-medium text-white/90 truncate max-w-full px-2">
+                <span className={`text-sm font-medium ${color.text} truncate max-w-full px-2`}>
                   {project.name}
                 </span>
                 {project.progress > 0 && (
                   <div className="absolute bottom-3 left-3 right-3">
-                    <div className="w-full bg-white/30 rounded-full h-1.5">
-                      <div className="bg-white rounded-full h-1.5" style={{ width: `${project.progress}%` }} />
+                    <div className={`w-full ${color.light} rounded-full h-1.5`}>
+                      <div className={`${color.bg} rounded-full h-1.5`} style={{ width: `${project.progress}%` }} />
                     </div>
                   </div>
                 )}
