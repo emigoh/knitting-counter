@@ -15,7 +15,7 @@ export interface Project {
   row_count: number;
   color_index: number;
   status: "in_progress" | "finished" | "hibernating" | "frogged";
-  craft: "knitting" | "crochet";
+  craft: "knitting" | "crochet" | "punch_needle";
   pattern_name: string | null;
   pattern_id: string | null;
   yarn_id: string | null;
@@ -36,7 +36,7 @@ export interface Pattern {
   user_id: string;
   name: string;
   author: string | null;
-  craft: "knitting" | "crochet";
+  craft: "knitting" | "crochet" | "punch_needle";
   category: string | null;
   yarn_weight: string | null;
   needle_size: string | null;

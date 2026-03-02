@@ -21,6 +21,7 @@ export const PROJECT_STATUSES = [
 export const CRAFT_TYPES = [
   { value: "knitting", label: "Knitting" },
   { value: "crochet", label: "Crochet" },
+  { value: "punch_needle", label: "Punch Needle" },
 ] as const;
 
 export const YARN_WEIGHTS = [

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase";
 import { useAuth } from "@/components/AuthProvider";
 import { Project } from "@/lib/types";
-import { PROJECT_COLORS, PROJECT_STATUSES } from "@/lib/constants";
+import { PROJECT_COLORS, PROJECT_STATUSES, CRAFT_TYPES } from "@/lib/constants";
 import StatusBadge from "@/components/StatusBadge";
 
 export default function ProjectsPage() {
@@ -18,6 +18,7 @@ export default function ProjectsPage() {
   const [filter, setFilter] = useState<string>("all");
   const [isAdding, setIsAdding] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
+  const [newProjectCraft, setNewProjectCraft] = useState("knitting");
 
   useEffect(() => {
     if (!user) { router.push("/login"); return; }
@@ -47,6 +48,11 @@ export default function ProjectsPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchProjects]);
 
+  const updateCraft = async (projectId: string, craft: string) => {
+    await supabase.from("projects").update({ craft }).eq("id", projectId);
+    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, craft: craft as Project["craft"] } : p));
+  };
+
   const addProject = async () => {
     if (!newProjectName.trim() || !user) return;
     const { error } = await supabase.from("projects").insert({
@@ -55,13 +61,14 @@ export default function ProjectsPage() {
       row_count: 0,
       color_index: projects.length % PROJECT_COLORS.length,
       status: "in_progress",
-      craft: "knitting",
+      craft: newProjectCraft,
       progress: 0,
       happiness: 0,
       photos: [],
     });
     if (!error) {
       setNewProjectName("");
+      setNewProjectCraft("knitting");
       setIsAdding(false);
       fetchProjects();
     }
@@ -121,28 +128,43 @@ export default function ProjectsPage() {
           {filtered.map((project) => {
             const color = getColor(project.color_index);
             return (
-              <Link
-                key={project.id}
-                href={`/notebook/projects/${project.id}`}
-                className={`group flex flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--cream)] border-2 ${color.border} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] aspect-square relative`}
-              >
-                <span className={`text-5xl font-bold tabular-nums ${color.text}`}>
-                  {project.row_count}
-                </span>
-                <span className={`text-sm font-medium ${color.text} truncate max-w-full px-2`}>
-                  {project.name}
-                </span>
-                {project.progress > 0 && (
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <div className={`w-full ${color.light} rounded-full h-1.5`}>
-                      <div className={`${color.bg} rounded-full h-1.5`} style={{ width: `${project.progress}%` }} />
+              <div key={project.id} className="relative aspect-square">
+                <Link
+                  href={`/notebook/projects/${project.id}`}
+                  className={`group flex flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--cream)] border-2 ${color.border} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] w-full h-full relative`}
+                >
+                  <span className={`text-5xl font-bold tabular-nums ${color.text}`}>
+                    {project.row_count}
+                  </span>
+                  <span className={`text-sm font-medium ${color.text} truncate max-w-full px-2`}>
+                    {project.name}
+                  </span>
+                  {project.progress > 0 && (
+                    <div className="absolute bottom-3 left-3 right-3">
+                      <div className={`w-full ${color.light} rounded-full h-1.5`}>
+                        <div className={`${color.bg} rounded-full h-1.5`} style={{ width: `${project.progress}%` }} />
+                      </div>
                     </div>
+                  )}
+                  <div className="absolute top-2 right-2">
+                    <StatusBadge status={project.status} />
                   </div>
-                )}
-                <div className="absolute top-2 right-2">
-                  <StatusBadge status={project.status} />
+                </Link>
+                <div
+                  className="absolute top-2 left-2"
+                  onClick={e => e.stopPropagation()}
+                >
+                  <select
+                    value={project.craft}
+                    onChange={e => updateCraft(project.id, e.target.value)}
+                    className={`rounded-md border ${color.border} bg-white/80 px-1.5 py-0.5 text-xs font-medium ${color.text} outline-none cursor-pointer hover:bg-white transition-colors`}
+                  >
+                    {CRAFT_TYPES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
                 </div>
-              </Link>
+              </div>
             );
           })}
 
@@ -158,9 +180,18 @@ export default function ProjectsPage() {
                   autoFocus
                   className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-center outline-none focus:border-[var(--primary)] dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
                 />
+                <select
+                  value={newProjectCraft}
+                  onChange={(e) => setNewProjectCraft(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm outline-none focus:border-[var(--primary)] dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                >
+                  {CRAFT_TYPES.map(c => (
+                    <option key={c.value} value={c.value}>{c.label}</option>
+                  ))}
+                </select>
                 <div className="flex gap-2">
                   <button type="submit" className="rounded-full bg-[var(--primary)] px-4 py-1.5 text-sm text-white">Add</button>
-                  <button type="button" onClick={() => { setIsAdding(false); setNewProjectName(""); }} className="text-sm text-zinc-500 hover:text-zinc-700">Cancel</button>
+                  <button type="button" onClick={() => { setIsAdding(false); setNewProjectName(""); setNewProjectCraft("knitting"); }} className="text-sm text-zinc-500 hover:text-zinc-700">Cancel</button>
                 </div>
               </form>
             </div>
