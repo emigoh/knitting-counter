@@ -48,11 +48,6 @@ export default function ProjectsPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user, fetchProjects]);
 
-  const updateCraft = async (projectId: string, craft: string) => {
-    await supabase.from("projects").update({ craft }).eq("id", projectId);
-    setProjects(prev => prev.map(p => p.id === projectId ? { ...p, craft: craft as Project["craft"] } : p));
-  };
-
   const addProject = async () => {
     if (!newProjectName.trim() || !user) return;
     const { error } = await supabase.from("projects").insert({
@@ -128,43 +123,28 @@ export default function ProjectsPage() {
           {filtered.map((project) => {
             const color = getColor(project.color_index);
             return (
-              <div key={project.id} className="relative aspect-square">
-                <Link
-                  href={`/notebook/projects/${project.id}`}
-                  className={`group flex flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--cream)] border-2 ${color.border} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] w-full h-full relative`}
-                >
-                  <span className={`text-5xl font-bold tabular-nums ${color.text}`}>
-                    {project.row_count}
-                  </span>
-                  <span className={`text-sm font-medium ${color.text} truncate max-w-full px-2`}>
-                    {project.name}
-                  </span>
-                  {project.progress > 0 && (
-                    <div className="absolute bottom-3 left-3 right-3">
-                      <div className={`w-full ${color.light} rounded-full h-1.5`}>
-                        <div className={`${color.bg} rounded-full h-1.5`} style={{ width: `${project.progress}%` }} />
-                      </div>
+              <Link
+                key={project.id}
+                href={`/notebook/projects/${project.id}`}
+                className={`group flex flex-col items-center justify-center gap-2 rounded-2xl bg-[var(--cream)] border-2 ${color.border} p-6 shadow-md transition-all hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] aspect-square relative`}
+              >
+                <span className={`text-5xl font-bold tabular-nums ${color.text}`}>
+                  {project.row_count}
+                </span>
+                <span className={`text-sm font-medium ${color.text} truncate max-w-full px-2`}>
+                  {project.name}
+                </span>
+                {project.progress > 0 && (
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <div className={`w-full ${color.light} rounded-full h-1.5`}>
+                      <div className={`${color.bg} rounded-full h-1.5`} style={{ width: `${project.progress}%` }} />
                     </div>
-                  )}
-                  <div className="absolute top-2 right-2">
-                    <StatusBadge status={project.status} />
                   </div>
-                </Link>
-                <div
-                  className="absolute top-2 left-2"
-                  onClick={e => e.stopPropagation()}
-                >
-                  <select
-                    value={project.craft}
-                    onChange={e => updateCraft(project.id, e.target.value)}
-                    className={`rounded-md border ${color.border} bg-white/80 px-1.5 py-0.5 text-xs font-medium ${color.text} outline-none cursor-pointer hover:bg-white transition-colors`}
-                  >
-                    {CRAFT_TYPES.map(c => (
-                      <option key={c.value} value={c.value}>{c.label}</option>
-                    ))}
-                  </select>
+                )}
+                <div className="absolute top-2 right-2">
+                  <StatusBadge status={project.status} />
                 </div>
-              </div>
+              </Link>
             );
           })}
 

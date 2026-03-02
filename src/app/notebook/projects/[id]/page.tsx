@@ -188,7 +188,7 @@ export default function ProjectDetailPage() {
               <h1 className="text-2xl font-bold text-[var(--foreground)]">{project.name}</h1>
               <div className="flex items-center gap-2 mt-1">
                 <StatusBadge status={project.status} />
-                <span className="text-xs text-zinc-500 capitalize">{project.craft}</span>
+                <span className="text-xs text-zinc-500">{CRAFT_TYPES.find(c => c.value === project.craft)?.label ?? project.craft}</span>
               </div>
             </div>
           </div>
@@ -392,9 +392,22 @@ export default function ProjectDetailPage() {
             <div className="rounded-xl bg-white p-6 shadow-sm border border-[var(--cream-dark)] dark:bg-zinc-800 dark:border-zinc-700">
               <h2 className="text-sm font-semibold text-zinc-500 uppercase tracking-wide mb-4">Details</h2>
               <div className="grid grid-cols-2 gap-4 text-sm">
-                {project.craft && (
-                  <div><span className="text-zinc-400">Craft</span><p className="font-medium capitalize">{project.craft}</p></div>
-                )}
+                <div>
+                  <span className="text-zinc-400">Craft</span>
+                  <select
+                    value={project.craft}
+                    onChange={async e => {
+                      const craft = e.target.value as Project["craft"];
+                      setProject({ ...project, craft });
+                      await supabase.from("projects").update({ craft }).eq("id", project.id);
+                    }}
+                    className="block mt-0.5 rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm font-medium text-zinc-700 outline-none focus:border-[var(--primary)] cursor-pointer dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                  >
+                    {CRAFT_TYPES.map(c => (
+                      <option key={c.value} value={c.value}>{c.label}</option>
+                    ))}
+                  </select>
+                </div>
                 {project.pattern_name && (
                   <div><span className="text-zinc-400">Pattern</span><p className="font-medium">{project.pattern_name}</p></div>
                 )}
