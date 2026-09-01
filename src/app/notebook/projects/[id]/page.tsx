@@ -408,6 +408,22 @@ export default function ProjectDetailPage() {
                     ))}
                   </select>
                 </div>
+                <div>
+                  <span className="text-zinc-400">Status</span>
+                  <select
+                    value={project.status}
+                    onChange={async e => {
+                      const status = e.target.value as Project["status"];
+                      setProject({ ...project, status });
+                      await supabase.from("projects").update({ status }).eq("id", project.id);
+                    }}
+                    className="block mt-0.5 rounded-md border border-zinc-200 bg-white px-2 py-1 text-sm font-medium text-zinc-700 outline-none focus:border-[var(--primary)] cursor-pointer dark:border-zinc-600 dark:bg-zinc-700 dark:text-white"
+                  >
+                    {PROJECT_STATUSES.map(s => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </div>
                 {project.pattern_name && (
                   <div><span className="text-zinc-400">Pattern</span><p className="font-medium">{project.pattern_name}</p></div>
                 )}
